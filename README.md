@@ -48,29 +48,61 @@ This gives the prototype a clear agentic decision process instead of a single un
 ## Requirements
 
 - Python 3.10 or newer
-- A Groq API key
 - The Kaggle customer support ticket dataset
+- One of the following LLM backends (see options below)
 
-The prototype uses Groq through an OpenAI-compatible API client. The configured model is:
+The orchestration code uses the OpenAI-compatible client interface, 
+so the backend can be swapped with a single line change.
+
+### Option A: Ollama (local, fully free)
+
+Install Ollama from https://ollama.com, then pull a model:
+
+```bash
+ollama pull llama3
+```
+
+Configure the client in `main.py`:
 
 ```python
-openai/gpt-oss-120b
+client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+model_name = "qwen3:4b"
 ```
 
-This satisfies the assignment requirement to use an LLM-based component with a free-tier/open model backend. The orchestration code uses the OpenAI-compatible client interface, so the backend can be changed later to another compatible provider or local endpoint if needed.
+### Option B: Groq (free API, no local compute needed)
 
-## Step 1: Clone Or Open The Project
+Create a free account at https://console.groq.com and generate an API key.
+Add it to your `.env` file:
 
-If you already have the project folder locally, open a terminal in the project root:
+GROQ_API_KEY=your_groq_api_key_here
 
-```bash
-cd /path/to/AssignmentHDI
+Configure the client in `main.py`:
+
+```python
+client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
+model_name = "llama3-70b-8192"
 ```
 
-For example:
+### Option C: OpenAI (paid, most reliable)
+
+Add your OpenAI API key to `.env`:
+
+OPENAI_API_KEY=your_openai_api_key_here
+
+Configure the client in `main.py`:
+
+```python
+client = OpenAI()
+model_name = "gpt-4o-mini"
+```
+
+## Step 1: Clone The Project
+
+Clone the repository from GitHub:
 
 ```bash
-cd ~/Desktop/AssignmentHDI
+git clone https://github.com/karimbouaziz95/Insurance-Support-Ticket-Triage-Agent.git
+cd Insurance-Support-Ticket-Triage-Agent
 ```
 
 ## Step 2: Create A Virtual Environment
@@ -105,7 +137,7 @@ pip install -r requirements.txt
 
 The main dependencies are:
 
-- `openai`: OpenAI-compatible API client used to call Groq.
+- `openai`: OpenAI-compatible API client used to call Ollama, Groq, or OpenAI.
 - `python-dotenv`: Loads environment variables from `.env`.
 - `pandas`: Reads the dataset and writes CSV output.
 - `groq`: Included for Groq compatibility, although the current code uses Groq through the OpenAI-compatible endpoint.
@@ -118,18 +150,22 @@ Create a `.env` file in the project root:
 touch .env
 ```
 
-Add your Groq API key:
+Add the API key for your chosen backend:
 
 ```env
+# Option B: Groq
 GROQ_API_KEY=your_groq_api_key_here
+
+# Option C: OpenAI
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-You can create or find your Groq API key in the Groq console.
+No API key is needed for Ollama (Option A).
 
 Important:
 
-- Do not commit your real `.env` file to a public repository.
-- The code reads this value in `main.py` using `python-dotenv`.
+- Do not commit your `.env` file to a public repository — it is already in `.gitignore`.
+- The code reads these values in `main.py` using `python-dotenv`.
 - If the key is missing or invalid, the script will fail when it tries to call the model.
 
 ## Step 5: Download The Dataset From Kaggle
@@ -220,6 +256,8 @@ PATH_TO_DATA = "archive/dataset-tickets-multi-lang-4-20k.csv"
 
 ## Step 6: Run The Triage Agent
 
+Before running, make sure you have configured the client in `main.py` for your chosen backend (see Step 4).
+
 Run the batch processor:
 
 ```bash
@@ -233,13 +271,7 @@ By default, the script:
 3. Drops tickets with missing or empty body text.
 4. Samples 200 tickets with a fixed random seed.
 5. Runs each ticket through the LLM triage workflow.
-6. Writes the results to a CSV file.
-
-The current output file is:
-
-```text
-triage_results_groq.csv
-```
+6. Writes the results to `triage_results.csv`.
 
 Depending on rate limits and model latency, processing 200 tickets can take several minutes. The script includes a short delay between requests to reduce the chance of hitting rate limits.
 
@@ -273,7 +305,7 @@ Expected columns:
 
 ```text
 ticket_id
-content
+snippet
 topic
 urgency
 next_action
@@ -286,6 +318,7 @@ Example row:
 
 ```text
 ticket_id: 12224
+snippet: Medical Data Encryption Assistance Required: The encryption process for medical data has failed...
 topic: Technical / Online Access
 urgency: High
 next_action: Forward to technical support team
@@ -323,7 +356,7 @@ The entry point is `main.py`.
 `main.py` performs the batch-level work:
 
 1. Loads environment variables.
-2. Creates the Groq/OpenAI-compatible client.
+2. Creates the LLM client for the configured backend.
 3. Loads a ticket subset from the dataset.
 4. Calls `triage_ticket()` for each ticket.
 5. Saves all results to CSV.
@@ -339,10 +372,10 @@ The entry point is `main.py`.
 `agent/orchestrator.py` handles the agent workflow:
 
 1. Builds the system prompt.
-2. Sends the ticket to the LLM.
-3. Requires the model to call the four triage tools.
+2. Sends the ticket to the LLM with 4 available tools.
+3. Runs an agentic loop until the LLM has called all tools.
 4. Extracts the tool-call arguments.
-5. Builds a final result dictionary.
+5. Builds a final structured result dictionary.
 
 `agent/tools.py` defines the model tool schemas:
 
@@ -361,19 +394,20 @@ Dataset path:
 PATH_TO_DATA = "archive/dataset-tickets-multi-lang-4-20k.csv"
 ```
 
-Model backend:
+Model backend — choose one:
 
 ```python
-client = OpenAI(
-    api_key=groq_api_key,
-    base_url="https://api.groq.com/openai/v1"
-)
-```
+# Option A: Ollama (local, fully free)
+client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+model_name = "llama3"
 
-Model name:
+# Option B: Groq (free API)
+client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
+model_name = "llama3-70b-8192"
 
-```python
-model_name = "openai/gpt-oss-120b"
+# Option C: OpenAI (paid)
+client = OpenAI()
+model_name = "gpt-4o-mini"
 ```
 
 Batch size:
@@ -385,20 +419,23 @@ tickets = load_tickets(PATH_TO_DATA, limit=200)
 Output file:
 
 ```python
-df.to_csv("triage_results_groq.csv", index=False)
+df.to_csv("triage_results.csv", index=False)
 ```
-
 ## Troubleshooting
 
 ### Missing API Key
 
-If you see an authentication error, check that `.env` exists and contains:
+If you see an authentication error, check that `.env` exists and contains the correct key for your chosen backend:
 
 ```env
+# Groq
 GROQ_API_KEY=your_groq_api_key_here
+
+# OpenAI
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-Also make sure `load_dotenv(override=True)` is still called in `main.py`.
+No API key is needed for Ollama. Also make sure `load_dotenv(override=True)` is still called in `main.py`.
 
 ### Dataset File Not Found
 
@@ -422,33 +459,11 @@ If you hit rate limits, increase this delay or run a smaller batch while testing
 
 ### Slow Runtime
 
-Processing 200 tickets requires 200 model calls, and some tickets may require multiple tool-call turns. To test quickly, use a smaller batch size such as 5 or 10.
+Processing 200 tickets requires multiple model calls per ticket. To test quickly, use a smaller batch size such as 5 or 10.
 
 ### Empty Or Missing Output Fields
 
 The output fields are extracted from model tool calls. If a field is empty, inspect:
 
-- The model response.
 - The tool schemas in `agent/tools.py`.
 - The system prompt in `agent/orchestrator.py`.
-
-For final delivery, remove temporary debugging files and avoid committing raw API response dumps.
-
-## Notes For Assignment Submission
-
-The final submission should include:
-
-- Source code.
-- `requirements.txt`.
-- This `README.md`.
-- A generated triage output CSV for at least 200 tickets.
-- A short technical document answering the assignment questionnaire.
-
-Before submitting, clean local-only files such as:
-
-- `.env`
-- `.DS_Store`
-- temporary API response dumps
-- Python cache folders
-
-The delivered CSV should contain at least 200 processed tickets and the required structured triage fields.
