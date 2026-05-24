@@ -12,29 +12,33 @@ load_dotenv(override=True)
 
 def main():
 
-    groq_api_key = os.getenv("GROQ_API_KEY")
 
     # Initialize OpenAI client
+    ## Ollama local
     client = OpenAI(base_url='http://localhost:11434/v1', api_key='ollama')
-    #client = OpenAI()
+    model_name = "qwen3:4b"
+
+    ## Groq model
+    #groq_api_key = os.getenv("GROQ_API_KEY")
     #client = OpenAI(
     #    api_key=groq_api_key, base_url="https://api.groq.com/openai/v1"
     #)
-
-    model_name = "qwen3:4b"
-    #model_name = "gpt-4o-mini"
     #model_name = "openai/gpt-oss-120b"
+
+    ## OpenAI model 
+    #client = OpenAI()
+    #model_name = "gpt-4o-mini"
 
 
     # Load and preprocess tickets
     tickets = load_tickets(PATH_TO_DATA, limit=500)
 
-    # Initilize list to store triage results
+    # Initialize list to store triage results
     triage_results = []
 
     # Triage each ticket and store the results
     for i, ticket in enumerate(tickets):
-        print(f"Triageing ticket {ticket['id']} ({i+1}/{len(tickets)})...")
+        print(f"Triaging ticket {ticket['id']} ({i+1}/{len(tickets)})...")
         triage_result = triage_ticket(ticket, client, model_name)
         triage_results.append(triage_result)
         time.sleep(1)  # Sleep for a short time to avoid hitting rate limits
