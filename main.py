@@ -15,19 +15,19 @@ def main():
     groq_api_key = os.getenv("GROQ_API_KEY")
 
     # Initialize OpenAI client
-    #client = OpenAI(base_url='http://localhost:11434/v1', api_key='ollama')
-    client = OpenAI()
+    client = OpenAI(base_url='http://localhost:11434/v1', api_key='ollama')
+    #client = OpenAI()
     #client = OpenAI(
     #    api_key=groq_api_key, base_url="https://api.groq.com/openai/v1"
     #)
 
-    #model_name = "qwen3:4b"
-    model_name = "gpt-4o-mini"
+    model_name = "qwen3:4b"
+    #model_name = "gpt-4o-mini"
     #model_name = "openai/gpt-oss-120b"
 
 
     # Load and preprocess tickets
-    tickets = load_tickets(PATH_TO_DATA, limit=5)
+    tickets = load_tickets(PATH_TO_DATA, limit=500)
 
     # Initilize list to store triage results
     triage_results = []
