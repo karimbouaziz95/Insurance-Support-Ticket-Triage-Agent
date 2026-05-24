@@ -39,4 +39,6 @@ def load_tickets(filepath, limit=200):
         for idx, row in df.iterrows()
     ]
 
+    df_ticket_ids = pd.DataFrame(tickets)
+    df_ticket_ids.to_csv("triage_ticket_ids.csv", index=False)
     return tickets

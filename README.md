@@ -59,7 +59,7 @@ so the backend can be swapped with a single line change.
 Install Ollama from https://ollama.com, then pull a model:
 
 ```bash
-ollama pull llama3
+ollama pull qwen3:4b
 ```
 
 Configure the client in `main.py`:
@@ -74,7 +74,9 @@ model_name = "qwen3:4b"
 Create a free account at https://console.groq.com and generate an API key.
 Add it to your `.env` file:
 
+```env
 GROQ_API_KEY=your_groq_api_key_here
+```
 
 Configure the client in `main.py`:
 
@@ -87,8 +89,9 @@ model_name = "llama3-70b-8192"
 
 Add your OpenAI API key to `.env`:
 
+```env
 OPENAI_API_KEY=your_openai_api_key_here
-
+```
 Configure the client in `main.py`:
 
 ```python
@@ -155,6 +158,7 @@ Add the API key for your chosen backend:
 ```env
 # Option B: Groq
 GROQ_API_KEY=your_groq_api_key_here
+
 
 # Option C: OpenAI
 OPENAI_API_KEY=your_openai_api_key_here
@@ -305,7 +309,7 @@ Expected columns:
 
 ```text
 ticket_id
-snippet
+text_snippet
 topic
 urgency
 next_action
@@ -318,7 +322,7 @@ Example row:
 
 ```text
 ticket_id: 12224
-snippet: Medical Data Encryption Assistance Required: The encryption process for medical data has failed...
+text_snippet: Medical Data Encryption Assistance Required: The encryption process for medical data has failed...
 topic: Technical / Online Access
 urgency: High
 next_action: Forward to technical support team
@@ -399,11 +403,11 @@ Model backend — choose one:
 ```python
 # Option A: Ollama (local, fully free)
 client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-model_name = "llama3"
+model_name = "qwen3:4b"
 
 # Option B: Groq (free API)
 client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
-model_name = "llama3-70b-8192"
+model_name = "openai/gpt-oss-120b"
 
 # Option C: OpenAI (paid)
 client = OpenAI()
