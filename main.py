@@ -33,6 +33,10 @@ def main():
     # Load and preprocess tickets
     tickets = load_tickets(PATH_TO_DATA, limit=500)
 
+    # (Optional) Save the ticket IDs to a CSV file for reference
+    df_ticket_ids = pd.DataFrame(tickets)
+    df_ticket_ids.to_csv("triage_ticket_ids.csv", index=False)
+
     # Initialize list to store triage results
     triage_results = []
 

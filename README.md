@@ -273,11 +273,11 @@ By default, the script:
 1. Loads the CSV from `archive/dataset-tickets-multi-lang-4-20k.csv`.
 2. Filters the dataset to English tickets.
 3. Drops tickets with missing or empty body text.
-4. Samples 200 tickets with a fixed random seed.
+4. Samples 500 tickets with a fixed random seed.
 5. Runs each ticket through the LLM triage workflow.
 6. Writes the results to `triage_results.csv`.
 
-Depending on rate limits and model latency, processing 200 tickets can take several minutes. The script includes a short delay between requests to reduce the chance of hitting rate limits.
+Depending on rate limits and model latency, processing 500 tickets can take several minutes. The script includes a short delay between requests to reduce the chance of hitting rate limits.
 
 ## Running A Smaller Sample Batch
 
@@ -293,12 +293,11 @@ Then run:
 python main.py
 ```
 
-This is useful when validating API credentials or checking formatting before running the full 200-ticket batch.
+This is useful when validating API credentials or checking formatting before running the full 500-ticket batch.
 
-Before final submission, set the limit back to at least 200:
 
 ```python
-tickets = load_tickets(PATH_TO_DATA, limit=200)
+tickets = load_tickets(PATH_TO_DATA, limit=500)
 ```
 
 ## Output Format
@@ -417,7 +416,7 @@ model_name = "gpt-4o-mini"
 Batch size:
 
 ```python
-tickets = load_tickets(PATH_TO_DATA, limit=200)
+tickets = load_tickets(PATH_TO_DATA, limit=500)
 ```
 
 Output file:
@@ -463,7 +462,7 @@ If you hit rate limits, increase this delay or run a smaller batch while testing
 
 ### Slow Runtime
 
-Processing 200 tickets requires multiple model calls per ticket. To test quickly, use a smaller batch size such as 5 or 10.
+Processing 500 tickets requires multiple model calls per ticket. To test quickly, use a smaller batch size such as 5 or 10.
 
 ### Empty Or Missing Output Fields
 

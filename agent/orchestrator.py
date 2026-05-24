@@ -104,7 +104,7 @@ def output_result(ticket: dict, messages: list) -> dict:
     return result
 
 
-def triage_ticket(ticket: dict, client: OpenAI, model_name: str) -> str:
+def triage_ticket(ticket: dict, client: OpenAI, model_name: str) -> dict:
     """
     Triage a support ticket and assign it to the appropriate team.
     """
